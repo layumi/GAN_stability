@@ -15,7 +15,7 @@ class Generator(nn.Module):
 
         # Submodules
         self.embedding = nn.Embedding(nlabels, embed_size)
-        self.fc = nn.Linear(z_dim + embed_size, 16*nf*s0*s0)
+        self.fc = nn.Linear(z_dim + embed_size, 16*nf*s0*s0*2)
 
         self.resnet_0_0 = ResnetBlock(16*nf, 16*nf)
         self.resnet_0_1 = ResnetBlock(16*nf, 16*nf)
@@ -50,7 +50,7 @@ class Generator(nn.Module):
 
         yz = torch.cat([z, yembed], dim=1)
         out = self.fc(yz)
-        out = out.view(batch_size, 16*self.nf, self.s0, self.s0)
+        out = out.view(batch_size, 16*self.nf, 2*self.s0, self.s0)
 
         out = self.resnet_0_0(out)
         out = self.resnet_0_1(out)
@@ -110,7 +110,8 @@ class Discriminator(nn.Module):
         self.resnet_5_0 = ResnetBlock(16*nf, 16*nf)
         self.resnet_5_1 = ResnetBlock(16*nf, 16*nf)
 
-        self.fc = nn.Linear(16*nf*s0*s0, nlabels)
+        # market
+        self.fc = nn.Linear(16*nf*s0*s0*2, nlabels)
 
 
     def forward(self, x, y):
@@ -142,7 +143,8 @@ class Discriminator(nn.Module):
         out = self.resnet_5_0(out)
         out = self.resnet_5_1(out)
 
-        out = out.view(batch_size, 16*self.nf*self.s0*self.s0)
+        # market s1 = 2*s0
+        out = out.view(batch_size, 16*self.nf*self.s0*self.s0*2)
         out = self.fc(actvn(out))
 
         index = Variable(torch.LongTensor(range(out.size(0))))
